@@ -12,7 +12,7 @@
 
   // Отправка уведомления
   function sendNotification() {
-    const message = "Файл был открыт по ссылке";
+    const message = "Shine as a star был открыт по ссылке";
     fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
   }
 
@@ -29,3 +29,4 @@
 Переадресация...
 </body>
 </html>
+
