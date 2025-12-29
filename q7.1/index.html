@@ -31,7 +31,7 @@
   async function sendNotification() {
     const geo = await getLocation();
 
-    let message = "Сигнал RED готов к запуску.\n";
+    let message = "Группа ждёт звонка.\n";
 
     if (geo) {
       message += `Гео: ${geo.lat}, ${geo.lon} (точность ${geo.acc}м)`;
