@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Сообщение</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      background: #0b0f19;
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .wrap {
+      width: min(1000px, 92vw);
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(32px, 6vw, 72px);
+      line-height: 1.05;
+      margin: 0 0 16px;
+      letter-spacing: 0.2px;
+    }
+    p {
+      font-size: clamp(16px, 2.2vw, 22px);
+      opacity: .85;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="msg">Сообщение пользователю</h1>
+    <p>Страница открыта.</p>
+  </div>
+
+  <script>
+    // 1) Текст на экране можно передавать через параметр ?m=
+    // пример: https://USERNAME.github.io/notify-page/?m=Привет
+    const params = new URLSearchParams(location.search);
+    const m = params.get("m");
+    if (m) document.getElementById("msg").textContent = m;
+
+    // 2) URL вашего webhook (см. шаг 2)
+    const WEBHOOK_URL = "https://ВАШ_ДОМЕН.workers.dev/notify";
+
+    // 3) Сформируем данные для уведомления
+    const payload = {
+      page: location.href,
+      messageShown: document.getElementById("msg").textContent,
+      referrer: document.referrer || null,
+      ua: navigator.userAgent,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+
+    // 4) Отправка уведомления (не блокирует загрузку страницы)
+    fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  </script>
+</body>
+</html>
