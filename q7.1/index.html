@@ -86,10 +86,11 @@
         // при желании редирект:
         // setTimeout(() => location.href = "https://example.com", 800);
       } catch (e) {
-        console.error(e);
-        ovTitle.textContent = "Ошибка";
-        ovText.textContent = "Не удалось отправить. Попробуйте ещё раз.";
-        btn.disabled = false;
+  console.error("notify error:", e);
+  ovTitle.textContent = "Ошибка";
+  ovText.textContent = String(e);
+  btn.disabled = false;
+}
       }
     });
   </script>
