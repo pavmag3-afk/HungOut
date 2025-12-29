@@ -36,55 +36,83 @@
     .overlay.on{ display:grid; }
     .overlay h2{ margin:0 0 10px; font-size:clamp(24px,4vw,44px); }
     .overlay p{ margin:0; opacity:.9; font-size:clamp(14px,2.2vw,18px); }
+    .small{ opacity:.7; font-size:12px; margin-top:10px; word-break:break-word; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <h1>ПРОЙДИТЕ КОНТРОЛЬ</h1>
-    <button id="btn">Продолжить</button>
+    <button id="btn" type="button">Продолжить</button>
   </div>
 
   <div id="overlay" class="overlay" aria-live="polite">
     <div>
       <h2 id="ovTitle">Обработка...</h2>
+      <p id="ovText">Пожалуйста, подождите</p>
+      <div id="ovErr" class="small" style="display:none;"></div>
     </div>
   </div>
 
-<script>
-  const SEND_URL = "https://dawn-star-acb4.pavmag3.workers.dev";
+  <script>
+    // Если не хотите делать сетевой запрос — оставьте пустым "" (будет демо-режим)
+    const SEND_URL = "https://example.com/api/notify"; // <-- замените на свой легитимный endpoint или ""
 
-  async function notify() {
-    const payload = { page: location.href, ref: document.referrer || null };
+    async function notify() {
+      const payload = {
+        page: location.href,
+        ref: document.referrer || null,
+        ts: new Date().toISOString()
+      };
 
-    const res = await fetch(SEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+      // Демо-режим без сервера
+      if (!SEND_URL) {
+        await new Promise(r => setTimeout(r, 800));
+        return { ok: true, demo: true };
+      }
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-  }
+      const res = await fetch(SEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-  const btn = document.getElementById("btn");
-  const overlay = document.getElementById("overlay");
-  const ovTitle = document.getElementById("ovTitle");
-  const ovText = document.getElementById("ovText");
+      const text = await res.text(); // читаем всегда, чтобы показать причину ошибки
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text || res.statusText}`);
 
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    overlay.classList.add("on");
-
-    try {
-      await notify();
-      ovTitle.textContent = "ОЖИДАЙТЕ ЗВОНКА";
-    } catch (e) {
-      console.error(e);
-      ovTitle.textContent = "Ошибка";
-      ovText.textContent = String(e);
-      btn.disabled = false;
+      // если сервер возвращает JSON — попробуем распарсить, иначе просто вернём текст
+      try { return JSON.parse(text); } catch { return { ok: true, raw: text }; }
     }
-  });
-</script>
+
+    const btn = document.getElementById("btn");
+    const overlay = document.getElementById("overlay");
+    const ovTitle = document.getElementById("ovTitle");
+    const ovText  = document.getElementById("ovText");
+    const ovErr   = document.getElementById("ovErr");
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+
+      ovTitle.textContent = "Обработка...";
+      ovText.textContent  = "Пожалуйста, подождите";
+      ovErr.style.display = "none";
+      ovErr.textContent   = "";
+
+      overlay.classList.add("on");
+
+      try {
+        await notify();
+        ovTitle.textContent = "ОЖИДАЙТЕ ЗВОНКА";
+        ovText.textContent  = "Заявка отправлена";
+      } catch (e) {
+        console.error(e);
+        ovTitle.textContent = "Ошибка";
+        ovText.textContent  = "Не удалось отправить. Попробуйте ещё раз.";
+        ovErr.style.display = "block";
+        ovErr.textContent   = String(e && e.message ? e.message : e);
+        btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
