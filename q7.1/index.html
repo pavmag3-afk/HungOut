@@ -47,51 +47,44 @@
 
   <div id="overlay" class="overlay" aria-live="polite">
     <div>
-      <h2 id="ovTitle">ОЖИДАЙТЕ ЗВОНКА</h2>
+      <h2 id="ovTitle">Обработка...</h2>
     </div>
   </div>
 
-  <script>
-    const SEND_URL = "https://dawn-star-acb4.pavmag3.workers.dev"; // <-- вставьте ваш URL
+<script>
+  const SEND_URL = "https://dawn-star-acb4.pavmag3.workers.dev";
 
-    async function notify() {
-      const payload = {
-        page: location.href,
-        ref: document.referrer || null
-      };
+  async function notify() {
+    const payload = { page: location.href, ref: document.referrer || null };
 
-      const res = await fetch(SEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error(await res.text());
-    }
-
-    const btn = document.getElementById("btn");
-    const overlay = document.getElementById("overlay");
-    const ovTitle = document.getElementById("ovTitle");
-    const ovText = document.getElementById("ovText");
-
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      overlay.classList.add("on");
-
-      try {
-        await notify();
-        ovTitle.textContent = "Positive";
-        ovText.textContent = "Группа ждёт звонка.";
-        // при желании редирект:
-        // setTimeout(() => location.href = "https://example.com", 800);
-      } catch (e) {
-  console.error("notify error:", e);
-  ovTitle.textContent = "Ошибка";
-  ovText.textContent = String(e);
-  btn.disabled = false;
-}
-      })
+    const res = await fetch(SEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
-  </script>
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  }
+
+  const btn = document.getElementById("btn");
+  const overlay = document.getElementById("overlay");
+  const ovTitle = document.getElementById("ovTitle");
+  const ovText = document.getElementById("ovText");
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    overlay.classList.add("on");
+
+    try {
+      await notify();
+      ovTitle.textContent = "ОЖИДАЙТЕ ЗВОНКА";
+    } catch (e) {
+      console.error(e);
+      ovTitle.textContent = "Ошибка";
+      ovText.textContent = String(e);
+      btn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>
